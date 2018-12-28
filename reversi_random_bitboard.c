@@ -111,15 +111,17 @@ typedef struct Game
   uint_fast64_t legal_moves;
   Players current_player; // 'X' is false and 'O' is true
 } Game;
-/* 
-typedef struct Move
+
+typedef struct Move Move;
+
+struct Move
 {
   Game state;             // How the board looks like
   Position pos;           // The move to reach state
   int score;              // Some score that state yields
   short next_moves_count; // Length of that array
   Move *next_moves[];     // An array of all possible moves
-} Move; */
+};
 
 // Initialize the board such that it looks like this if printed:
 //  |A|B|C|D|E|F|G|H|
