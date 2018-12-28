@@ -44,13 +44,13 @@ Details: https://en.wikipedia.org/wiki/Reversi
 typedef enum Edges
 {
   BOTTOM = 0x00FFFFFFFFFFFFFF,
-  ERIGHT = 0x7F7F7F7F7F7F7F7F,       // b: right edge
-  BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F, // c: bottom and right edge (redundant)
-  BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,  // d: bottom and left edge (reduntdant)
-  UPPER = 0xFFFFFFFFFFFFFF00,        // e: upper edge
-  ELEFT = 0xFEFEFEFEFEFEFEFE,        // f: left edge
-  UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,  // g: upper and right edge (redundant)
-  UPPER_LEFT = 0xFEFEFEFEFEFEFE00    // h: upper and left edge (redundant)
+  ERIGHT = 0x7F7F7F7F7F7F7F7F,
+  BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F,
+  BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,
+  UPPER = 0xFFFFFFFFFFFFFF00,
+  ELEFT = 0xFEFEFEFEFEFEFEFE,
+  UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,
+  UPPER_LEFT = 0xFEFEFEFEFEFEFE00
 } Edges;
 
 /* // Bitshift to the left means moving to the right or down. Yes, it does.
@@ -68,14 +68,14 @@ const short delta[] = {
 
 typedef enum Delta
 {
-  DOWN = BOARD_WIDTH,             // a: vertical downwards
-  DRIGHT = 1,                     // b: horizontal to the right
-  DOWN_RIGHT = BOARD_WIDTH + 1,   // c: top-left to bottom-right
-  DOWN_LEFT = -(BOARD_WIDTH - 1), // d: top-right to bottom-left
-  UP = -BOARD_WIDTH,              // e: vertical upwards
-  DLEFT = -1,                     // f: horizontal to the left
-  UP_RIGHT = BOARD_WIDTH - 1,     // g: bottom-left to top-right
-  UP_LEFT = -(BOARD_WIDTH + 1),   // h: bottom-right to top-left
+  DOWN = BOARD_WIDTH,
+  DRIGHT = 1,
+  DOWN_RIGHT = BOARD_WIDTH + 1,
+  DOWN_LEFT = -(BOARD_WIDTH - 1),
+  UP = -BOARD_WIDTH,
+  DLEFT = -1,
+  UP_RIGHT = BOARD_WIDTH - 1,
+  UP_LEFT = -(BOARD_WIDTH + 1),
 } DELTA;
 
 typedef struct
@@ -138,8 +138,8 @@ Game *init_game(Players current_player)
   // todo: implement
   Game *g = malloc(sizeof(*g));
   g->current_player = current_player;
-  g->board[BLACK] = field_at(4, 3) | field_at(3, 4); // Replace with actual magic bit pattern 0x810000000
-  g->board[WHITE] = field_at(3, 3) | field_at(4, 4); // For maximum beauty 0x1008000000
+  g->board[BLACK] = field_at(4, 3) | field_at(3, 4); // todo: Replace with actual magic bit pattern 0x810000000
+  g->board[WHITE] = field_at(3, 3) | field_at(4, 4); // todo: For maximum beauty 0x1008000000
   g->legal_moves = 0x102004080000;                   // The first turn is ALWAYS the same.
 
   return g;
@@ -165,14 +165,27 @@ uint_fast64_t bitshift(uint_fast64_t left_value, short shift_count)
 // Stones that are not protected by enemy stones will just vanish, as will those next to a specific edge.
 uint_fast64_t curling(Game *g, uint_fast64_t edge, short direction)
 {
+  // We blank out the fields for the edge of whatever direction we are going to
+  // since we can't set stones beyond the edge.
   uint_fast64_t non_edge_set = g->board[!(g->current_player)] & edge;
+
+  // Now we shift the current player's stones in one direction
+  // If we encounter an enemy stone, there might be a possible turn.
+  // Otherwise said stone will vanish.
   uint_fast64_t possible = non_edge_set & (bitshift(g->board[g->current_player], direction));
 
+  // We're a doing that eight times (since it is a 8x8 board, eh?)
   for (int i = 0; i < 6; i++)
   {
+    // If we continue to encounter enemy stones we move forward
+    // Otherwise we stay put wherever that stone is.
+    // (Think Pokémon ice-floor maze)
     possible |= non_edge_set & bitshift(possible, direction);
   }
 
+  // Now we check whether behind an enemy row there is a free spot
+  // If so, we slide our stones there and, et voila, we have possible moves.
+  // Otherwise, we discard that move candidate.
   possible = (empty(g) & bitshift(possible, direction));
 
   return possible;
@@ -190,6 +203,8 @@ uint_fast64_t possible_moves(Game *g)
     moves |= curling(g, edge[i], delta[i]);
   } */
 
+  // curling only works for one direction
+  // So we do that eight times
   moves |= curling(g, BOTTOM, DOWN);
   moves |= curling(g, ERIGHT, DRIGHT);
   moves |= curling(g, BOTTOM_RIGHT, DOWN_RIGHT);
@@ -262,26 +277,6 @@ static inline void switch_stones(Game *g)
   g->legal_moves = possible_moves(g);
 }
 
-// Check whether, if starting at (x,y), direction (dx,dy) is a legal direction
-// to reverse stones. A direction is legal if (assuming my stone is 'X')
-// the pattern in that direction is: O+X.* (one or more 'O's, followed by an 'X',
-// followed by zero or more arbitrary characters).
-// (dx,dy) is element of { (a,b) | a, b in {-1, 0, 1} and (a,b) != (0,0) }
-bool legal_dir(Game *g, int x, int y, int dx, int dy)
-{
-  /*  x += dx;
-  y += dy;
-  while (!out_of_bounds(x, y) && (g->board[x][y] == your_stone(g)))
-  {
-    x += dx;
-    y += dy;
-    if (!out_of_bounds(x, y) && (g->board[x][y] == my_stone(g)))
-    {
-      return true;
-    }
-  } */
-  return false;
-}
 
 // Check whether (x,y) is a legal position to place a stone. A position is legal
 // if it is empty ('_'), is on the board, and has at least one legal direction.
@@ -293,9 +288,14 @@ static inline bool legal(Game *g, int x, int y)
 // Reverse stones starting at (x,y) in direction (dx,dy), but only if the
 // direction is legal. May modify the state of the game.
 // (dx,dy) is element of { (a,b) | a, b in {-1, 0, 1} and (a,b) != (0,0) }
+
+// This works almost exactly like curling above, with one exception.
 uint_fast64_t reverse_dir(Game *g, int x, int y, uint_fast64_t edge, short direction)
 {
   uint_fast64_t non_edge_set = g->board[!(g->current_player)] & edge;
+
+  // This time, while we are sliding player's stone, we are effectively converting
+  // every enemy stone that is encountered
   uint_fast64_t result = non_edge_set & (bitshift(field_at(x, y), direction));
 
   for (int i = 0; i < 6; i++)
@@ -303,7 +303,9 @@ uint_fast64_t reverse_dir(Game *g, int x, int y, uint_fast64_t edge, short direc
     result |= non_edge_set & bitshift(result, direction);
   }
 
-  return (bitshift(result, direction) & g->board[g->current_player]) ? result : 0;
+  // If with the last step we arrive at one of current player's stones
+  // Then we can commit our changes to the board. Otherwise, zero, niet, nada, nichts da.
+  return (g->board[g->current_player] & bitshift(result, direction)) ? result : 0;
 }
 
 // Reverse the stones in all legal directions starting at (x,y).
@@ -321,6 +323,7 @@ void reverse(Game *g, int x, int y)
     result |= reverse_dir(g, x, y, edge[i], -delta[i]);
   } */
 
+  // We are gathering the changes as results of possible turns.
   result |= reverse_dir(g, x, y, BOTTOM, -DOWN);
   result |= reverse_dir(g, x, y, ERIGHT, -DRIGHT);
   result |= reverse_dir(g, x, y, BOTTOM_RIGHT, -DOWN_RIGHT);
@@ -330,6 +333,7 @@ void reverse(Game *g, int x, int y)
   result |= reverse_dir(g, x, y, UPPER_RIGHT, -UP_RIGHT);
   result |= reverse_dir(g, x, y, UPPER_LEFT, -UP_LEFT);
 
+  // And then we commit them to the bitboards.
   g->board[g->current_player] |= result;
   g->board[!(g->current_player)] ^= result;
 }
