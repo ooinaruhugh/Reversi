@@ -30,18 +30,30 @@ Details: https://en.wikipedia.org/wiki/Reversi
 #define is_set(b, x, y) b &field_at(x, y)
 
 // todo: something with enums?
-const uint_fast64_t edge[] = {
-    0x00FFFFFFFFFFFFFF, // a: bottom edge
-    0x7F7F7F7F7F7F7F7F, // b: right edge
-    0x007F7F7F7F7F7F7F, // c: bottom and right edge (redundant)
-    0x00FEFEFEFEFEFEFE, // d: bottom and left edge (reduntdant)
-    0xFFFFFFFFFFFFFF00, // e: upper edge
-    0xFEFEFEFEFEFEFEFE, // f: left edge
-    0x7F7F7F7F7F7F7F00, // g: upper and right edge (redundant)
-    0xFEFEFEFEFEFEFE00  // h: upper and left edge (redundant)
-};
+// const uint_fast64_t edge[] = {
+//     0x00FFFFFFFFFFFFFF, // a: bottom edge
+//     0x7F7F7F7F7F7F7F7F, // b: right edge
+//     0x007F7F7F7F7F7F7F, // c: bottom and right edge (redundant)
+//     0x00FEFEFEFEFEFEFE, // d: bottom and left edge (reduntdant)
+//     0xFFFFFFFFFFFFFF00, // e: upper edge
+//     0xFEFEFEFEFEFEFEFE, // f: left edge
+//     0x7F7F7F7F7F7F7F00, // g: upper and right edge (redundant)
+//     0xFEFEFEFEFEFEFE00  // h: upper and left edge (redundant)
+// };
 
-// Bitshift to the left means moving to the right or down. Yes, it does.
+typedef enum Edges
+{
+  BOTTOM = 0x00FFFFFFFFFFFFFF,
+  ERIGHT = 0x7F7F7F7F7F7F7F7F,       // b: right edge
+  BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F, // c: bottom and right edge (redundant)
+  BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,  // d: bottom and left edge (reduntdant)
+  UPPER = 0xFFFFFFFFFFFFFF00,        // e: upper edge
+  ELEFT = 0xFEFEFEFEFEFEFEFE,        // f: left edge
+  UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,  // g: upper and right edge (redundant)
+  UPPER_LEFT = 0xFEFEFEFEFEFEFE00    // h: upper and left edge (redundant)
+} Edges;
+
+/* // Bitshift to the left means moving to the right or down. Yes, it does.
 // todo: seriously consider enums
 const short delta[] = {
     BOARD_WIDTH,        // a: vertical downwards
@@ -52,7 +64,19 @@ const short delta[] = {
     -1,                 // f: horizontal to the left
     BOARD_WIDTH - 1,    // g: bottom-left to top-right
     -(BOARD_WIDTH + 1), // h: bottom-right to top-left
-};
+}; */
+
+typedef enum Delta
+{
+  DOWN = BOARD_WIDTH,             // a: vertical downwards
+  DRIGHT = 1,                     // b: horizontal to the right
+  DOWN_RIGHT = BOARD_WIDTH + 1,   // c: top-left to bottom-right
+  DOWN_LEFT = -(BOARD_WIDTH - 1), // d: top-right to bottom-left
+  UP = -BOARD_WIDTH,              // e: vertical upwards
+  DLEFT = -1,                     // f: horizontal to the left
+  UP_RIGHT = BOARD_WIDTH - 1,     // g: bottom-left to top-right
+  UP_LEFT = -(BOARD_WIDTH + 1),   // h: bottom-right to top-left
+} DELTA;
 
 typedef struct
 {
@@ -87,6 +111,15 @@ typedef struct Game
   uint_fast64_t legal_moves;
   Players current_player; // 'X' is false and 'O' is true
 } Game;
+/* 
+typedef struct Move
+{
+  Game state;             // How the board looks like
+  Position pos;           // The move to reach state
+  int score;              // Some score that state yields
+  short next_moves_count; // Length of that array
+  Move *next_moves[];     // An array of all possible moves
+} Move; */
 
 // Initialize the board such that it looks like this if printed:
 //  |A|B|C|D|E|F|G|H|
@@ -150,10 +183,19 @@ uint_fast64_t possible_moves(Game *g)
 {
   uint_fast64_t moves = 0;
 
-  for (size_t i = 0; i < 8; i++)
+  /* for (size_t i = 0; i < 8; i++)
   {
     moves |= curling(g, edge[i], delta[i]);
-  }
+  } */
+
+  moves |= curling(g, BOTTOM, DOWN);
+  moves |= curling(g, ERIGHT, DRIGHT);
+  moves |= curling(g, BOTTOM_RIGHT, DOWN_RIGHT);
+  moves |= curling(g, BOTTOM_LEFT, DOWN_LEFT);
+  moves |= curling(g, UPPER, UP);
+  moves |= curling(g, ELEFT, DLEFT);
+  moves |= curling(g, UPPER_RIGHT, UP_RIGHT);
+  moves |= curling(g, UPPER_LEFT, UP_LEFT);
 
   return moves;
 }
@@ -194,7 +236,8 @@ bool out_of_bounds(int x, int y)
   return ((x > 7 || x < 0)) || ((y > 7) || (y < 0));
 }
 
-static inline bool which_stone(char c) {
+static inline bool which_stone(char c)
+{
   return c == 'O';
 }
 
@@ -224,7 +267,7 @@ static inline void switch_stones(Game *g)
 // (dx,dy) is element of { (a,b) | a, b in {-1, 0, 1} and (a,b) != (0,0) }
 bool legal_dir(Game *g, int x, int y, int dx, int dy)
 {
- /*  x += dx;
+  /*  x += dx;
   y += dy;
   while (!out_of_bounds(x, y) && (g->board[x][y] == your_stone(g)))
   {
@@ -248,19 +291,7 @@ static inline bool legal(Game *g, int x, int y)
 // Reverse stones starting at (x,y) in direction (dx,dy), but only if the
 // direction is legal. May modify the state of the game.
 // (dx,dy) is element of { (a,b) | a, b in {-1, 0, 1} and (a,b) != (0,0) }
-void reverse_dir(Game *g, int x, int y, int dx, int dy)
-{
-  /* if (!legal_dir(g, x, y, dx, dy))
-    return;
-  do
-  {
-    g->board[x][y] = my_stone(g);
-    x += dx;
-    y += dy;
-  } while (!out_of_bounds(x, y) && (g->board[x][y] == your_stone(g))); */
-}
-
-uint_fast64_t flip(Game *g, int x, int y, uint_fast64_t edge, short direction)
+uint_fast64_t reverse_dir(Game *g, int x, int y, uint_fast64_t edge, short direction)
 {
   uint_fast64_t non_edge_set = g->board[!(g->current_player)] & edge;
   uint_fast64_t result = non_edge_set & (bitshift(field_at(x, y), direction));
@@ -270,9 +301,7 @@ uint_fast64_t flip(Game *g, int x, int y, uint_fast64_t edge, short direction)
     result |= non_edge_set & bitshift(result, direction);
   }
 
-  return (bitshift(result, direction) & g->board[g->current_player]) ? 
-          result :
-          0;
+  return (bitshift(result, direction) & g->board[g->current_player]) ? result : 0;
 }
 
 // Reverse the stones in all legal directions starting at (x,y).
@@ -281,47 +310,44 @@ uint_fast64_t flip(Game *g, int x, int y, uint_fast64_t edge, short direction)
 // Probably let our one stone slide over the board without blanking the occupied slots
 void reverse(Game *g, int x, int y)
 {
-  g->board[g->current_player] |= field_at(x,y);
+  g->board[g->current_player] |= field_at(x, y);
 
   uint_fast64_t result = 0;
 
-  for (size_t i = 0; i < 8; i++)
+  /* for (size_t i = 0; i < 8; i++)
   {
-    result |= flip(g,  x, y, edge[i], -delta[i]);
-  }
+    result |= reverse_dir(g, x, y, edge[i], -delta[i]);
+  } */
+
+  result |= reverse_dir(g, x, y, BOTTOM, -DOWN);
+  result |= reverse_dir(g, x, y, ERIGHT, -DRIGHT);
+  result |= reverse_dir(g, x, y, BOTTOM_RIGHT, -DOWN_RIGHT);
+  result |= reverse_dir(g, x, y, BOTTOM_LEFT, -DOWN_LEFT);
+  result |= reverse_dir(g, x, y, UPPER, -UP);
+  result |= reverse_dir(g, x, y, ELEFT, -DLEFT);
+  result |= reverse_dir(g, x, y, UPPER_RIGHT, -UP_RIGHT);
+  result |= reverse_dir(g, x, y, UPPER_LEFT, -UP_LEFT);
 
   g->board[g->current_player] |= result;
   g->board[!(g->current_player)] ^= result;
 }
 
-
 // Due to recursion we need a function prototype for human_move
 Position human_move(Game *g);
 
-Position mark_possible_moves(Game *g) {
-  /* for (int row = 0; row < 8; row++) {
-    for (int column = 0; column < 8; column++) {
-      if (legal(g, column, row)) g->board[column][row] = '*';
-    }
-  }
-  print_board(g);
-  for (int row = 0; row < 8; row++) {
-    for (int column = 0; column < 8; column++) {
-      if (g->board[column][row] == '*') g->board[column][row] = '_';
-    }
-  } */
+Position mark_possible_moves(Game *g)
+{
+
   uint_fast64_t possible = possible_moves(g);
 
   printf(" |A|B|C|D|E|F|G|H|\n");
   for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++)
   {
-    if (!(i%8)) printf("%i|", 1 + i/BOARD_WIDTH);
+    if (!(i % 8))
+      printf("%i|", 1 + i / BOARD_WIDTH);
     if ((occupied(g) | possible) & ONE << i)
     {
-      printf("%c|", g->board[BLACK] & (ONE << i) ? 'X' : 
-                    g->board[WHITE] & (ONE << i) ? 'O' :
-                    possible & (ONE << i) ? '*' :
-                    '_');
+      printf("%c|", g->board[BLACK] & (ONE << i) ? 'X' : g->board[WHITE] & (ONE << i) ? 'O' : possible & (ONE << i) ? '*' : '_');
     }
     else
       printf("_|");
@@ -420,7 +446,7 @@ Position pop(PositionStack *ps)
 // Returns a random position from the stack.
 Position random_position(PositionStack *ps)
 {
-  int rand_index = rand() % ps->length+1;
+  int rand_index = rand() % ps->length + 1;
   return ps->values[rand_index];
 }
 
@@ -429,13 +455,16 @@ Position computer_move(Game *g)
 {
   PositionStack ps = make_position_stack();
 
-  for (int row = 0; row < 8; row++) {
-    for (int column = 0; column < 8; column++) {
-      if (legal(g, column, row)) push(&ps, make_position(column, row));
+  for (int row = 0; row < 8; row++)
+  {
+    for (int column = 0; column < 8; column++)
+    {
+      if (legal(g, column, row))
+        push(&ps, make_position(column, row));
     }
   }
 
-  return ps.length ? random_position(&ps) : make_position(-1,-1);
+  return ps.length ? random_position(&ps) : make_position(-1, -1);
 }
 
 int main(void)
@@ -447,10 +476,11 @@ int main(void)
   while (true)
   {
     printf("%c's move: ", my_stone(g));
-    Position pos = !(g->current_player) ? human_move(g) : computer_move(g);
-    // Position pos = human_move(&g);
+    // Position pos = !(g->current_player) ? human_move(g) : computer_move(g);
+    Position pos = human_move(g);
 
-    if (my_stone(g) == 'O') print_position(pos);
+    if (my_stone(g) == 'O')
+      print_position(pos);
 
     reverse(g, pos.x, pos.y);
     print_board(g);
@@ -458,14 +488,14 @@ int main(void)
     printf("Score for %c: %d\n", my_stone(g), score);
     switch_stones(g);
 
-    /* printf("%c's move: ", my_stone(&g));
-    pos = computer_move(&g);
+    printf("%c's move: ", my_stone(g));
+    pos = computer_move(g);
     print_position(pos);
-    reverse(&g, pos.x, pos.y);
-    print_board(&g);
-    score = count_stones(&g, my_stone(&g)) - count_stones(&g, your_stone(&g));
-    printf("Score for %c: %d\n", my_stone(&g), score);
-    switch_stones(&g); */
+    reverse(g, pos.x, pos.y);
+    print_board(g);
+    score = count_stones(g, my_stone(g)) - count_stones(g, your_stone(g));
+    printf("Score for %c: %d\n", my_stone(g), score);
+    switch_stones(g);
   }
   return 0;
 }
