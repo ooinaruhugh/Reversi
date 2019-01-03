@@ -15,19 +15,20 @@ Details: https://en.wikipedia.org/wiki/Reversi
 
 #include "base.h"
 #include <stdint.h>
+#include "definitions.h"
 
-#define ONE (uint_fast64_t)1          // Typecasting prevents ugly overflow stuff
-#define BOARD_MASK 0xFFFFFFFFFFFFFFFF // 16 * 4 bits
-#define BOARD_WIDTH 8
-#define BOARD_HEIGHT 8
-// #define BLACK 0
-// #define WHITE 1
+// #define ONE (uint_fast64_t)1          // Typecasting prevents ugly overflow stuff
+// #define BOARD_MASK 0xFFFFFFFFFFFFFFFF // 16 * 4 bits
+// #define BOARD_WIDTH 8
+// #define BOARD_HEIGHT 8
+// // #define BLACK 0
+// // #define WHITE 1
 
-#define occupied(state) ((state->board[0] | state->board[1]))
-#define empty(state) ~(occupied(state))
-#define shift_xy(x, y) (x + BOARD_WIDTH * y)
-#define field_at(x, y) (ONE << shift_xy(x, y))
-#define is_set(b, x, y) b &field_at(x, y)
+// #define occupied(state) ((state->board[0] | state->board[1]))
+// #define empty(state) ~(occupied(state))
+// #define shift_xy(x, y) (x + BOARD_WIDTH * y)
+// #define field_at(x, y) (ONE << shift_xy(x, y))
+// #define is_set(b, x, y) b &field_at(x, y)
 
 // todo: something with enums?
 // const uint_fast64_t edge[] = {
@@ -41,17 +42,17 @@ Details: https://en.wikipedia.org/wiki/Reversi
 //     0xFEFEFEFEFEFEFE00  // h: upper and left edge (redundant)
 // };
 
-typedef enum Edges
-{
-  BOTTOM = 0x00FFFFFFFFFFFFFF,
-  ERIGHT = 0x7F7F7F7F7F7F7F7F,
-  BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F,
-  BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,
-  UPPER = 0xFFFFFFFFFFFFFF00,
-  ELEFT = 0xFEFEFEFEFEFEFEFE,
-  UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,
-  UPPER_LEFT = 0xFEFEFEFEFEFEFE00
-} Edges;
+// typedef enum Edges
+// {
+//   BOTTOM = 0x00FFFFFFFFFFFFFF,
+//   ERIGHT = 0x7F7F7F7F7F7F7F7F,
+//   BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F,
+//   BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,
+//   UPPER = 0xFFFFFFFFFFFFFF00,
+//   ELEFT = 0xFEFEFEFEFEFEFEFE,
+//   UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,
+//   UPPER_LEFT = 0xFEFEFEFEFEFEFE00
+// } Edges;
 
 /* // Bitshift to the left means moving to the right or down. Yes, it does.
 // todo: seriously consider enums
@@ -66,23 +67,23 @@ const short delta[] = {
     -(BOARD_WIDTH + 1), // h: bottom-right to top-left
 }; */
 
-typedef enum Delta
-{
-  DOWN = BOARD_WIDTH,
-  DRIGHT = 1,
-  DOWN_RIGHT = BOARD_WIDTH + 1,
-  DOWN_LEFT = -(BOARD_WIDTH - 1),
-  UP = -BOARD_WIDTH,
-  DLEFT = -1,
-  UP_RIGHT = BOARD_WIDTH - 1,
-  UP_LEFT = -(BOARD_WIDTH + 1),
-} DELTA;
+// typedef enum Delta
+// {
+//   DOWN = BOARD_WIDTH,
+//   DRIGHT = 1,
+//   DOWN_RIGHT = BOARD_WIDTH + 1,
+//   DOWN_LEFT = -(BOARD_WIDTH - 1),
+//   UP = -BOARD_WIDTH,
+//   DLEFT = -1,
+//   UP_RIGHT = BOARD_WIDTH - 1,
+//   UP_LEFT = -(BOARD_WIDTH + 1),
+// } DELTA;
 
-typedef struct
-{
-  int x;
-  int y;
-} Position;
+// typedef struct
+// {
+//   int x;
+//   int y;
+// } Position;
 
 static inline Position make_position(int x, int y)
 {
@@ -95,9 +96,9 @@ static inline void print_position(Position p)
   printf("%c%d\n", p.x + 'A', p.y + 1);
 }
 
-#define N 8
+// #define N 8
 
-typedef enum Players
+/* typedef enum Players
 {
   BLACK = 0, // X
   WHITE = 1  // O
@@ -111,7 +112,7 @@ typedef struct Game
   uint_fast64_t legal_moves;
   Players current_player; // 'X' is false and 'O' is true
 } Game;
-
+ */
 typedef struct Move Move;
 
 struct Move
