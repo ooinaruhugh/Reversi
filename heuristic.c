@@ -27,16 +27,30 @@ static inline int heuristic(uint_fast64_t pos)
 }
 uint_fast64_t most_promising_move(uint_fast64_t possible)
 {
-  int count = 1; //where y = count / height +1 and x = count % width + 1;
+  int count = 0; //where y = count / height +1 and x = count % width + 1;
   uint_fast64_t best_move = 0;
+  int best_score = 0;
 
   while (possible)
   {
-    
+    printf("%llx\n", possible);
     count += __builtin_ctzll(possible) + 1;
-    possible >>= __builtin_ctzll(possible);
+    possible >>= __builtin_ctzll(possible)+1;
 
-    if (possible & 1)
-      heuristic(ONE << count);
+    // if (possible & 1)
+    best_move = heuristic(ONE << count) > best_score ? ONE << count : best_move;
+    best_score = heuristic(ONE << count) > best_score ? ONE << heuristic(ONE << count) : best_score;
   }
+
+  return best_move;
+}
+
+int main(int argc, char const *argv[])
+{
+  uint_fast64_t test = 0x102004080000;
+  uint_fast64_t most_promising = most_promising_move(test);
+  printf("Most promising move: %c%i\n", 
+          (__builtin_ctzll(most_promising) % BOARD_WIDTH) + 'A',
+          __builtin_ctzll(most_promising) / BOARD_HEIGHT);
+  return 0;
 }
