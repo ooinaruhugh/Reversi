@@ -75,3 +75,4 @@ dkms.conf
 !.vscode/launch.json
 !.vscode/extensions.json
 *.jar
+.vscode/settings.json

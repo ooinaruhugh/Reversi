@@ -11,9 +11,9 @@
 #define C_SPOTS 0x4281000000008142
 #define X_SPOTS 0x42000000004200
 #define ONE_SPOTS 0x182424180000
-#define TWO_SPOTS 0x240000240000
-#define FOUR_SPOTS 0x3C424242423C00
-#define SIX_SPOTS 0x3C0081818181003C
+#define TWO_SPOTS 0x3C0081818181003C
+#define FOUR_SPOTS 0x240000240000
+#define SIX_SPOTS 0x3C424242423C00
 
 #define POSITION_STACK_SIZE 64
 typedef struct {
@@ -74,7 +74,7 @@ uint_fast64_t random_move(uint_fast64_t possible) {
 
 uint_fast64_t most_promising_move(uint_fast64_t possible)
 {
-  int count = 1; //where y = count / height +1 and x = count % width + 1;
+  int count = 0; //where y = count / height +1 and x = count % width + 1;
   uint_fast64_t best_move = 0;
   int best_score = 0;
 
@@ -82,10 +82,9 @@ uint_fast64_t most_promising_move(uint_fast64_t possible)
   {
     printf("%llx\n", possible);
     count += __builtin_ctzll(possible);
-    possible >>= __builtin_ctzll(possible)+1;
 
     // if (possible & 1)
-    int current_score = heuristic(ONE << count);
+    int current_score = heuristic(ONE << (count+1));
     printf("Current score: %i\n", current_score);
     if (current_score == best_score)
       best_move |= ONE << count;
@@ -96,6 +95,8 @@ uint_fast64_t most_promising_move(uint_fast64_t possible)
     }
     // best_move = current_score > best_score ? ONE << count : best_move;
     // best_score = current_score > best_score ? ONE << current_score : best_score;
+    possible >>= __builtin_ctzll(possible)+1;
+    // count++;
   }
 
   return random_move(best_move);
@@ -110,5 +111,10 @@ int main(int argc, char const *argv[])
   printf("Most promising move: %c%i\n", 
           (__builtin_ctzll(most_promising) % BOARD_WIDTH) + 'A',
           (__builtin_ctzll(most_promising) / BOARD_HEIGHT)+1);
+
+  /* uint_fast64_t test = 0x8;
+  test &= ONE << __builtin_ctz(test);
+  printf("%x %i\n", test,  __builtin_ctz(test)); */
+
   return 0;
 }
