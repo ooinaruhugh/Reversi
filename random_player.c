@@ -246,7 +246,7 @@ void play(void) {
             }
             g = init_game(c);
             // print_board(&g);
-            // fprintf(stderr, "my stone is: %c\n", my_stone(&g));
+            fprintf(stderr, "my stone is: %c\n", my_stone(&g));
         } else if (s_starts_with(s, "srand: ") && n >= 8) { // seed random number generator
             int i = s_index(s, " ");
             int seed = atoi(s + i + 1);
