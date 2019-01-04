@@ -134,14 +134,13 @@ struct Move
 // 6|_|_|_|_|*|_|_|_|
 // 7|_|_|_|_|_|_|_|_|
 // 8|_|_|_|_|_|_|_|_|
-Game *init_game(Players current_player)
-{
-  // todo: implement
+Game *init_game(Players current_player){
+
   Game *g = malloc(sizeof(*g));
   g->current_player = current_player;
-  g->board[BLACK] = field_at(4, 3) | field_at(3, 4); // todo: Replace with actual magic bit pattern 0x810000000
-  g->board[WHITE] = field_at(3, 3) | field_at(4, 4); // todo: For maximum beauty 0x1008000000
-  g->legal_moves = 0x102004080000;                   // The first turn is ALWAYS the same.
+  g->board[BLACK] = field_at(4, 3) | field_at(3, 4); // Replace with actual magic bit pattern 0x810000000
+  g->board[WHITE] = field_at(3, 3) | field_at(4, 4); // For maximum beauty 0x1008000000
+  g->legal_moves = possible_moves(g);            
 
   return g;
 }
