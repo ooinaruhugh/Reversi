@@ -134,6 +134,8 @@ struct Move
 // 6|_|_|_|_|*|_|_|_|
 // 7|_|_|_|_|_|_|_|_|
 // 8|_|_|_|_|_|_|_|_|
+
+uint_fast64_t possible_moves(Game *g);
 Game *init_game(Players current_player){
 
   Game *g = malloc(sizeof(*g));
@@ -394,14 +396,16 @@ Position human_move(Game *g)
 
 int count_stones(Game *g, char c)
 {
-  short count = 0;
+  /* short count = 0;
   uint_fast64_t current_player = g->board[which_stone(c)];
   while (current_player)
   {
     count += (current_player & 1);
     current_player >>= 1;
   }
-  return count;
+  return count; */
+
+  return popcount(g->board[which_stone(c)]);
 }
 
 #define POSITION_STACK_SIZE 64

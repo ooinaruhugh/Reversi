@@ -2,7 +2,7 @@
 #include "definitions.h"
 
 // todo: Remove struct Position as it is not necessary
-Position make_position(int x, int y)
+static inline Position make_position(int x, int y)
 {
   Position p = {x, y};
   return p;
@@ -238,14 +238,7 @@ Move make_move(int x, int y, int score)
 // Count the number of cells of the given value.
 int count_cells(Game *g, char c)
 {
-  short count = 0;
-  uint_fast64_t current_player = g->board[which_stone(c)];
-  while (current_player)
-  {
-    count += (current_player & 1);
-    current_player >>= 1;
-  }
-  return count;
+  return popcount(g->board[which_stone(c)]);
 }
 
 static inline int heuristic(uint_fast64_t pos)

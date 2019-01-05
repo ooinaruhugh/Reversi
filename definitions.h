@@ -71,7 +71,7 @@ typedef struct
     int y;
 } Position;
 
-Position make_position(int x, int y);
+static inline Position make_position(int x, int y);
 
 // INPUT PARSING CONSTANTS
 
