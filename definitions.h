@@ -1,14 +1,20 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <time.h>
 
-//GENERAL DEFINITIONS
+// GENERAL DEFINITIONS
 
 #define ctzll __builtin_ctzll
 #define popcount __builtin_popcount
 
-//DEFINITIONS, STRUCTS, ENUMS OF THE AI
+// DEFINITIONS, STRUCTS, ENUMS OF THE AI
 
-//BITMASKS
+// BITMASKS
 #define ONE (uint_fast64_t)1                         // Typecasting prevents ugly overflow stuff
 #define BOARD_MASK (uint_fast64_t)0xFFFFFFFFFFFFFFFF // 16 * 4 bits
 #define BOARD_WIDTH 8
@@ -20,7 +26,7 @@
 #define field_at(x, y) (ONE << shift_xy(x, y))
 #define is_set(b, x, y) b &field_at(x, y)
 
-//HEURISTIC
+// HEURISTIC
 #define CORNERS 0x8100000000000081
 #define C_SPOTS 0x4281000000008142
 #define X_SPOTS 0x42000000004200
@@ -29,8 +35,8 @@
 #define FOUR_SPOTS 0x240000240000
 #define SIX_SPOTS 0x3C424242423C00
 
-//#################BITMASK#################
-//BITMASK TO CONSTRUCT BOARD
+// #################BITMASK#################
+// BITMASK TO CONSTRUCT BOARD
 typedef enum Edges
 {
     BOTTOM = 0x00FFFFFFFFFFFFFF,
@@ -43,8 +49,8 @@ typedef enum Edges
     UPPER_LEFT = 0xFEFEFEFEFEFEFE00
 } Edges;
 
-//###########DIRECTIONS########
-//AVAILABLE DIRECTIONS WHEN PUTTING STONES
+// ###########DIRECTIONS########
+// AVAILABLE DIRECTIONS WHEN PUTTING STONES
 typedef enum Delta
 {
     DOWN = BOARD_WIDTH,
@@ -57,7 +63,8 @@ typedef enum Delta
     UP_LEFT = -(BOARD_WIDTH + 1),
 } DELTA;
 
-//COORDINATES OF STONE
+// COORDINATES OF STONE
+// todo: This is superflous and is only neccessary for outputting a turn
 typedef struct
 {
     int x;
@@ -66,8 +73,27 @@ typedef struct
 
 Position make_position(int x, int y);
 
+// INPUT PARSING CONSTANTS
 
-//@@@@@@@@@@@@@@@ REVERSI RANDOM BITBOARD BELOW @@@@@@@@@@@@@@@@//
+#define DBL_POINT_SPACE_MAGIC 0x203A // == ": "
+
+// Forgive me
+#define INIT_DPS_MAGIC 0x203A74696E69 // == "init: "
+#define INIT_DPS_X_MAGIC 0x58203A74696E69 // == "init: X"
+#define INIT_DPS_O_MAGIC 0x4F203A74696E69 // == "init: O"
+
+#define SRAND_DPS_MAGIC 0x203A646E617273 // == "srand: "
+
+#define NONE_MAGIC 0x656E6F6E // == "none"
+
+#define SLICE_OF_4(bin_string) bin_string & 0xFFFFFFFF
+
+#define SLICE_OF_6(bin_string) bin_string & 0xFFFFFFFFFFFF
+#define SLICE_OF_7(bin_string) bin_string & 0xFFFFFFFFFFFFFF
+
+
+
+// @@@@@@@@@@@@@@@ REVERSI RANDOM BITBOARD BELOW @@@@@@@@@@@@@@@@//
 
 #define N 8 //breadth + height of board
 
