@@ -111,3 +111,15 @@ typedef struct Game
   uint_fast64_t legal_moves;
   Players current_player; // 'X' is false and 'O' is true
 } Game;
+
+// todo: There's a struct named Move that's going to be removed. For now, this needs to be named Moves.
+typedef struct Moves Moves;
+
+struct Moves
+{
+  Game state;             // How the board looks like
+  Position pos;           // The move to reach state todo: replace with uint_fast64_t move;
+  int score;              // Some score that state yields
+  short next_moves_count; // Length of that array
+  Moves *next_moves[];     // An array of all possible moves
+};
