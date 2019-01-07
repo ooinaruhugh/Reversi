@@ -9,8 +9,8 @@
 #include <limits.h>
 
 // MACROS FOR DEBUGGING
-#define BILLION  1000000000.0
-#define MILLION  1000000.0
+#define BILLION 1000000000.0
+#define MILLION 1000000.0
 #define NANO 0.0000000001
 
 #define DEBUG 0
@@ -19,6 +19,7 @@
 // GENERAL DEFINITIONS
 
 #define ctzll __builtin_ctzll
+#define clzll __builtin_clzll
 #define popcount __builtin_popcount
 
 // DEFINITIONS, STRUCTS, ENUMS OF THE AI
@@ -48,36 +49,36 @@
 // BITMASK TO CONSTRUCT BOARD
 typedef enum Edges
 {
-    BOTTOM = 0x00FFFFFFFFFFFFFF,
-    ERIGHT = 0x7F7F7F7F7F7F7F7F,
-    BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F,
-    BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,
-    UPPER = 0xFFFFFFFFFFFFFF00,
-    ELEFT = 0xFEFEFEFEFEFEFEFE,
-    UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,
-    UPPER_LEFT = 0xFEFEFEFEFEFEFE00
+  BOTTOM = 0x00FFFFFFFFFFFFFF,
+  ERIGHT = 0x7F7F7F7F7F7F7F7F,
+  BOTTOM_RIGHT = 0x007F7F7F7F7F7F7F,
+  BOTTOM_LEFT = 0x00FEFEFEFEFEFEFE,
+  UPPER = 0xFFFFFFFFFFFFFF00,
+  ELEFT = 0xFEFEFEFEFEFEFEFE,
+  UPPER_RIGHT = 0x7F7F7F7F7F7F7F00,
+  UPPER_LEFT = 0xFEFEFEFEFEFEFE00
 } Edges;
 
 // ###########DIRECTIONS########
 // AVAILABLE DIRECTIONS WHEN PUTTING STONES
 typedef enum Delta
 {
-    DOWN = BOARD_WIDTH,
-    DRIGHT = 1,
-    DOWN_RIGHT = BOARD_WIDTH + 1,
-    DOWN_LEFT = -(BOARD_WIDTH - 1),
-    UP = -BOARD_WIDTH,
-    DLEFT = -1,
-    UP_RIGHT = BOARD_WIDTH - 1,
-    UP_LEFT = -(BOARD_WIDTH + 1),
+  DOWN = BOARD_WIDTH,
+  DRIGHT = 1,
+  DOWN_RIGHT = BOARD_WIDTH + 1,
+  DOWN_LEFT = -(BOARD_WIDTH - 1),
+  UP = -BOARD_WIDTH,
+  DLEFT = -1,
+  UP_RIGHT = BOARD_WIDTH - 1,
+  UP_LEFT = -(BOARD_WIDTH + 1),
 } DELTA;
 
 // COORDINATES OF STONE
 // todo: This is superflous and is only neccessary for outputting a turn
 typedef struct
 {
-    int x;
-    int y;
+  int x;
+  int y;
 } Position;
 
 static inline Position make_position(int x, int y);
@@ -87,7 +88,7 @@ static inline Position make_position(int x, int y);
 #define DBL_POINT_SPACE_MAGIC 0x203A // == ": "
 
 // Forgive me
-#define INIT_DPS_MAGIC 0x203A74696E69 // == "init: "
+#define INIT_DPS_MAGIC 0x203A74696E69     // == "init: "
 #define INIT_DPS_X_MAGIC 0x58203A74696E69 // == "init: X"
 #define INIT_DPS_O_MAGIC 0x4F203A74696E69 // == "init: O"
 
@@ -99,8 +100,6 @@ static inline Position make_position(int x, int y);
 
 #define SLICE_OF_6(bin_string) bin_string & 0xFFFFFFFFFFFF
 #define SLICE_OF_7(bin_string) bin_string & 0xFFFFFFFFFFFFFF
-
-
 
 // @@@@@@@@@@@@@@@ REVERSI RANDOM BITBOARD BELOW @@@@@@@@@@@@@@@@//
 
@@ -127,8 +126,11 @@ typedef struct Moves Moves;
 struct Moves
 {
   Game state;             // How the board looks like
-  Position pos;           // The move to reach state todo: replace with uint_fast64_t move;
+  uint_fast64_t pos;      // The move to reach state todo: replace with uint_fast64_t move;
   int score;              // Some score that state yields
   short next_moves_count; // Length of that array
-  Moves *next_moves[];     // An array of all possible moves
+  Moves *next_moves[];    // An array of all possible moves
 };
+
+//TREE STRUCTURE'S GOING TO BE HERE
+uint_fast64_t even_more_most_promising_move(Game node, int depth, int opponent);

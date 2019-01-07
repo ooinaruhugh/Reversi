@@ -217,11 +217,31 @@ void reverse(Game *g, int x, int y)
 // 6|_|_|_|_|_|_|_|_|
 // 7|_|_|_|_|_|_|_|_|
 // 8|_|_|_|_|_|_|_|_|
+
+// Count the number of cells of the given value.
+int count_cells(Game *g, Players player)
+{
+  return popcount(g->board[player]);
+}
+
 int eval_board(Game *g)
 {
-  int value = 0;
+  int value = count_cells(g->board, g->current_player) - count_cells(g->board, !g->current_player);
 
   return value;
+}
+
+uint_fast64_t even_more_most_promising_move(Game node, int depth)
+{
+  Moves current;
+  current.state = node;
+  Moves* promising;
+  // Evaluate node
+  // Generate next possible moves
+  // Evaluate them
+  // Repeat
+  // Return whatever with the highest score
+
 }
 
 typedef struct
@@ -236,12 +256,6 @@ Move make_move(int x, int y, int score)
   return m;
 }
 
-// Count the number of cells of the given value.
-int count_cells(Game *g, char c)
-{
-  return popcount(g->board[which_stone(c)]);
-}
-
 static inline int heuristic(uint_fast64_t pos)
 {
   return CORNERS & pos ? 10 : C_SPOTS & pos ? 1 : X_SPOTS & pos ? 3 : ONE_SPOTS & pos ? 1 : TWO_SPOTS & pos ? 2 : FOUR_SPOTS & pos ? 4 : SIX_SPOTS & pos ? 6 : 0;
@@ -249,7 +263,7 @@ static inline int heuristic(uint_fast64_t pos)
 
 uint_fast64_t some_move(uint_fast64_t possible)
 {
-  int count = rand() % (64 - __builtin_clzll(possible));
+  int count = rand() % (64 - clzll(possible));
   count += ctzll(possible >> count);
   return ONE << count & possible;
 }
@@ -317,7 +331,7 @@ void play(void)
     struct timespec start, end;
     clock_gettime(CLOCK_REALTIME, &start);
     // fprintf(stderr, "t: %llu\n", t);
-    
+
 #endif
 
     char *input_buffer = calloc(1, 100);
@@ -346,7 +360,7 @@ void play(void)
       uint64_t my_stone = *gyoutou - INIT_DPS_MAGIC;
 
       // We only want to shift my_stone by whole bytes.
-      // That's why we divide by 8 and multiply again then.
+      // That's why we divide by 8 and multiply again afterwards.
       char c = 0xFF & (my_stone >> (ctzll(my_stone) / 8 * 8));
       // Theoretically, we could hard code that as:
       // char c = 0xFF & (my_stone >> __CHAR_BIT__ * 6);
@@ -397,12 +411,12 @@ void play(void)
       else
       {
         printf("none\n"); // no valid move found
-        #if MEASURE_TIME
-      if (count_time)
-      fprintf(stderr, "Average time: %f\n", avg_time / count_time);
-      avg_time = 0;
-      count_time = 0; 
-      #endif
+#if MEASURE_TIME
+        if (count_time)
+          fprintf(stderr, "Average time: %f\n", avg_time / count_time);
+        avg_time = 0;
+        count_time = 0;
+#endif
       }
     }
 
@@ -472,7 +486,7 @@ void play(void)
     // fprintf(stderr, "t: %llu\n", t);
     clock_gettime(CLOCK_REALTIME, &end);
     double time_spent = (end.tv_sec - start.tv_sec) * 1000 +
-						(end.tv_nsec - start.tv_nsec) / MILLION;
+                        (end.tv_nsec - start.tv_nsec) / MILLION;
 
     // double duration = t * 1000.0 / CLOCKS_PER_SEC;
     fprintf(stderr, "duration: %g ms\n", time_spent);
