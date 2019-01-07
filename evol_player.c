@@ -224,25 +224,12 @@ int count_cells(Game *g, Players player)
   return popcount(g->board[player]);
 }
 
-int eval_board(Game *g)
+int eval_board(Game *g, Players us)
 {
-  int value = count_cells(g->board, g->current_player) - count_cells(g->board, !g->current_player);
+  int value = count_cells(g->board, us) - count_cells(g->board, !us);
 
   return value;
 }
-
-// uint_fast64_t even_more_most_promising_move(Game node, int depth)
-// {
-//   Moves current;
-//   current.state = node;
-//   Moves* promising;
-//   // Evaluate node
-//   // Generate next possible moves
-//   // Evaluate them
-//   // Repeat
-//   // Return whatever with the highest score
-
-// }
 
 typedef struct
 {
@@ -319,6 +306,7 @@ void play(void)
 {
   srand(time(NULL));
   Game *g = NULL;
+  Players us;
 #if MEASURE_TIME
   double avg_time = 0;
   int count_time = 0;
@@ -377,7 +365,8 @@ void play(void)
         exit(0);
       }
 
-      g = init_game(which_stone(c));
+      us = which_stone(c);
+      g = init_game(us);
 
 #if DEBUG
       print_board(g);                                    // DEBUG
