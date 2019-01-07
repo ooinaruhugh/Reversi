@@ -76,5 +76,6 @@ dkms.conf
 !.vscode/extensions.json
 *.jar
 .vscode/settings.json
+.vs/*
 
 .DS_Store
