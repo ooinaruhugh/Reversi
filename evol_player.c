@@ -231,18 +231,18 @@ int eval_board(Game *g)
   return value;
 }
 
-uint_fast64_t even_more_most_promising_move(Game node, int depth)
-{
-  Moves current;
-  current.state = node;
-  Moves* promising;
-  // Evaluate node
-  // Generate next possible moves
-  // Evaluate them
-  // Repeat
-  // Return whatever with the highest score
+// uint_fast64_t even_more_most_promising_move(Game node, int depth)
+// {
+//   Moves current;
+//   current.state = node;
+//   Moves* promising;
+//   // Evaluate node
+//   // Generate next possible moves
+//   // Evaluate them
+//   // Repeat
+//   // Return whatever with the highest score
 
-}
+// }
 
 typedef struct
 {
