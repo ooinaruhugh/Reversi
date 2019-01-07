@@ -195,7 +195,8 @@ void true_reverse(Game *g, uint_fast64_t move)
 }
 
 // todo: First remove struct Position, then this can go as well.
-void reverse(Game *g, int x, int y) {
+void reverse(Game *g, int x, int y)
+{
   true_reverse(g, field_at(x, y));
 }
 
@@ -304,8 +305,21 @@ void play(void)
 {
   srand(time(NULL));
   Game *g = NULL;
+#if MEASURE_TIME
+  double avg_time = 0;
+  int count_time = 0;
+#endif
+
   while (true)
   {
+#if MEASURE_TIME
+    // clock_t t = clock(); // get current timestamp
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
+    // fprintf(stderr, "t: %llu\n", t);
+    
+#endif
+
     char *input_buffer = calloc(1, 100);
     uint64_t *gyoutou = input_buffer; // Alternatively BOL (jap. gyoutou)
 
@@ -340,7 +354,9 @@ void play(void)
       // "a == b" == "!(a ^ b)"
       if (*gyoutou ^ INIT_DPS_X_MAGIC && *gyoutou ^ INIT_DPS_O_MAGIC)
       {
+#if DEBUG
         fprintf(stderr, "Illegal stone: %c\n", c);
+#endif
         free(input_buffer);
         if (g)
           free(g);
@@ -349,8 +365,10 @@ void play(void)
 
       g = init_game(which_stone(c));
 
-      // print_board(g); // DEBUG
-      // fprintf(stderr, "my stone is: %c\n", my_stone(g)); // DEBUG
+#if DEBUG
+      print_board(g);                                    // DEBUG
+      fprintf(stderr, "my stone is: %c\n", my_stone(g)); // DEBUG
+#endif
     }
 
     // todo: like really, which sensible person wouldn't do this with args
@@ -366,7 +384,9 @@ void play(void)
 
     else if ((*gyoutou & 0xFFFFFFFF) == NONE_MAGIC)
     {
-      // fprintf(stderr, "opponent made no move\n"); // DEBUG
+#if DEBUG
+      fprintf(stderr, "opponent made no move\n"); // DEBUG
+#endif
       Position pos = this_players_turn(g);
       if (pos.x >= 0)
       {
@@ -377,6 +397,12 @@ void play(void)
       else
       {
         printf("none\n"); // no valid move found
+        #if MEASURE_TIME
+      if (count_time)
+      fprintf(stderr, "Average time: %f\n", avg_time / count_time);
+      avg_time = 0;
+      count_time = 0; 
+      #endif
       }
     }
 
@@ -385,19 +411,25 @@ void play(void)
     else if (!(0xFFFFFFFFFFF50000 & *gyoutou))
     {
       *gyoutou &= 0xFFFF;
+#if DEBUG
       fprintf(stderr, "some_move: 0x%llx\n", *gyoutou);
+#endif
       // regular move of opponent
       Position pos;
       pos.x = toupper(*gyoutou & 0xFF) - 'A';
       pos.y = 0xFF & (*gyoutou >> __CHAR_BIT__) - '1';
-
-      // fprintf(stderr, "opponent set: %c%d\n", pos.x + 'a', pos.y + 1); // DEBUG
+#if DEBUG
+      fprintf(stderr, "opponent set: %c%d\n", pos.x + 'a', pos.y + 1); // DEBUG
+#endif
       if (pos.x < 0 || pos.x >= N || pos.y < 0 || pos.y >= N)
       {
+#if DEBUG
         fprintf(stderr, "Opponent move out of bounds: (%d, %d)\n", pos.x, pos.y);
+#endif
         free(input_buffer);
         if (g)
           free(g);
+
         exit(0);
       }
 
@@ -425,11 +457,28 @@ void play(void)
         free(g);
       exit(0);
     }
+#if DEBUG
     print_board(g); // DEBUG
+#endif
     //        sleep(2); // seconds
     fflush(stdout); // need to push the data out of the door
-    // fprintf(stderr, "Possible moves:0x%" PRIxFAST64 "\n", g->legal_moves);
+#if DEBUG
+    fprintf(stderr, "Possible moves:0x%" PRIxFAST64 "\n", g->legal_moves);
+#endif
     free(input_buffer);
+
+#if MEASURE_TIME
+    // t = clock() - t; // compute elapsed time
+    // fprintf(stderr, "t: %llu\n", t);
+    clock_gettime(CLOCK_REALTIME, &end);
+    double time_spent = (end.tv_sec - start.tv_sec) * 1000 +
+						(end.tv_nsec - start.tv_nsec) / MILLION;
+
+    // double duration = t * 1000.0 / CLOCKS_PER_SEC;
+    fprintf(stderr, "duration: %g ms\n", time_spent);
+    avg_time += time_spent;
+    count_time++;
+#endif
   }
 }
 

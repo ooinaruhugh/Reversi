@@ -6,6 +6,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
+#include <limits.h>
+
+// MACROS FOR DEBUGGING
+#define BILLION  1000000000.0
+#define MILLION  1000000.0
+#define NANO 0.0000000001
+
+#define DEBUG 0
+#define MEASURE_TIME 1
 
 // GENERAL DEFINITIONS
 
