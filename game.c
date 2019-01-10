@@ -34,7 +34,8 @@ void print_board(Game *g)
 // Check whether position (x,y) is on the board.
 bool out_of_bounds(ThreeChars position)
 {
-  return position & 0xB0C0;
+  return (position && 0xFF) < 0x41 || (position && 0xFF) > 0x48 || (position && 0xFF00) < 0x31 || (position && 0xFF00) > 0x38;
+  // return (position & 0xC0B0);// || position > ;
 }
 
 static inline Bitboard make_move(int x, int y)

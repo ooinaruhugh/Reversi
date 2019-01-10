@@ -20,12 +20,12 @@
 
 Game *init_game(Players current_player);
 uint_fast64_t possible_moves(const Game *g);
-static inline bool legal(const Game *g, uint_fast64_t move);
+extern inline bool legal(const Game *g, uint_fast64_t move);
 void reverse(Game *g, uint_fast64_t move);
 
-static inline bool which_stone(char c);
-static inline char my_stone(Game *g);
-static inline void switch_stones(Game *g);
+extern inline bool which_stone(char c);
+extern inline char my_stone(Game *g);
+extern inline void switch_stones(Game *g);
 
 
 #endif // BOARD_H

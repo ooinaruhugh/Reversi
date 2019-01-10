@@ -8,7 +8,6 @@
 #include <time.h>
 #include <limits.h>
 
-#
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 

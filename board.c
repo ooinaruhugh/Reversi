@@ -72,7 +72,7 @@ uint_fast64_t possible_moves(const Game *g)
 
 // Check whether (x,y) is a legal position to place a stone. A position is legal
 // if it is empty ('_'), is on the board, and has at least one legal direction.
-static inline bool legal(const Game *g, uint_fast64_t move)
+extern inline bool legal(const Game *g, uint_fast64_t move)
 {
   return g->legal_moves & move;
 }
@@ -120,18 +120,18 @@ void reverse(Game *g, uint_fast64_t move)
 }
 
 
-static inline bool which_stone(char c)
+extern inline bool which_stone(char c)
 {
   return c == 'O';
 }
 
 // If it is X's turn, then "my stone" is 'X', otherwise it is 'O'.
-static inline char my_stone(Game *g)
+extern inline char my_stone(Game *g)
 {
   return g->current_player ? 'O' : 'X';
 }
 
-static inline void switch_stones(Game *g)
+extern inline void switch_stones(Game *g)
 {
   g->current_player = !g->current_player;
   g->legal_moves = possible_moves(g);
