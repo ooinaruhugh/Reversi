@@ -14,8 +14,11 @@ prog1lib:
 
 # pattern rule for compiling .c-file to executable
 
-max_salt: get_smoked.c prog1lib
-	$(CC) $(CFLAGS) $(DEBUG) $< -L$(PROG1LIBDIR) -l$(PROG1LIBNAME) -iquote$(PROG1LIBDIR) -o the_player
-
 %: %.c prog1lib
 	$(CC) $(CFLAGS) $(DEBUG) $< -L$(PROG1LIBDIR) -l$(PROG1LIBNAME) -iquote$(PROG1LIBDIR) -o $@
+  
+evol_player: evol_ai.c board.c game.c
+	$(CC) $(CFLAGS) $(DEBUG) $< -o $@
+
+tweaked_evol_player: tweaked_evol_ai.c board.c game.c
+	$(CC) $(CFLAGS) $(DEBUG) $< -o $@

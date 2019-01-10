@@ -8,19 +8,30 @@
 #include <time.h>
 #include <limits.h>
 
+#
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
+
+
+
+
+
 // MACROS FOR DEBUGGING
 #define BILLION 1000000000.0
 #define MILLION 1000000.0
 #define NANO 0.0000000001
 
 #define DEBUG 0
-#define MEASURE_TIME 1
+#define MEASURE_TIME 0
 
 // GENERAL DEFINITIONS
 
 #define ctzll __builtin_ctzll
 #define clzll __builtin_clzll
 #define popcount __builtin_popcount
+
+typedef uint_fast32_t ThreeChars;
+typedef uint_fast64_t Bitboard;
 
 // DEFINITIONS, STRUCTS, ENUMS OF THE AI
 
@@ -73,15 +84,15 @@ typedef enum Delta
   UP_LEFT = -(BOARD_WIDTH + 1),
 } DELTA;
 
-// COORDINATES OF STONE
-// todo: This is superflous and is only neccessary for outputting a turn
-typedef struct
-{
-  int x;
-  int y;
-} Position;
+// // COORDINATES OF STONE
+// // todo: This is superflous and is only neccessary for outputting a turn
+// typedef struct
+// {
+//   int x;
+//   int y;
+// } Position;
 
-static inline Position make_position(int x, int y);
+// static inline Position make_position(int x, int y);
 
 // INPUT PARSING CONSTANTS
 
@@ -120,3 +131,5 @@ typedef struct Game
   Players current_player; // 'X' is false and 'O' is true
 } Game;
 
+
+#endif // DEFINITIONS_H
