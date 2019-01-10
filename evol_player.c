@@ -390,9 +390,9 @@ void play(void)
 #if DEBUG
       fprintf(stderr, "opponent made no move\n"); // DEBUG
 #endif
-      Position pos = this_players_turn(g);
-      if (pos.x >= 0)
+      if (g->legal_moves)
       {
+        Position pos = this_players_turn(g);
         reverse(g, pos.x, pos.y);
         // print_board(g);
         printf("%c%d\n", pos.x + 'a', pos.y + 1);
