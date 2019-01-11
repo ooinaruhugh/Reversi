@@ -103,9 +103,6 @@ typedef struct
   int y;
 } Position;
 
-Position make_position(int x, int y);
-
-
 typedef enum Players
 {
   BLACK = 0, // X
@@ -120,5 +117,9 @@ typedef struct Game
   Players current_player; // 'X' is false and 'O' is true
 } Game;
 
+Position make_position(int x, int y);
+bool out_of_bounds(int x, int y);
+bool which_stone(char c);
+char my_stone(Game *g);
 
 #endif // DEFINITIONS_H

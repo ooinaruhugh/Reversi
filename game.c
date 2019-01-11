@@ -1,13 +1,29 @@
 #include "definitions.h"
 #include "board.h"
 #include "scoring.h"
-#include "utility.h"
 // #include "debug.h"
 
 Position make_position(int x, int y)
 {
   Position p = {x, y};
   return p;
+}
+
+// Check whether position (x,y) is on the board.
+bool out_of_bounds(int x, int y)
+{
+  return x < 0 || x > BOARD_WIDTH - 1 || y < 0 || y > BOARD_WIDTH - 1;
+}
+
+bool which_stone(char c)
+{
+  return c == 'O';
+}
+
+// If it is X's turn, then "my stone" is 'X', otherwise it is 'O'.
+char my_stone(Game *g)
+{
+  return g->current_player ? 'O' : 'X';
 }
 
 
