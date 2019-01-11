@@ -85,13 +85,13 @@ typedef enum Delta
 
 // // COORDINATES OF STONE
 // // todo: This is superflous and is only neccessary for outputting a turn
-// typedef struct
-// {
-//   int x;
-//   int y;
-// } Position;
+typedef struct
+{
+  int x;
+  int y;
+} Position;
 
-// static inline Position make_position(int x, int y);
+static inline Position make_position(int x, int y);
 
 // INPUT PARSING CONSTANTS
 

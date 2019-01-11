@@ -3,6 +3,17 @@
 #include "scoring.h"
 // #include "debug.h"
 
+static inline Position make_position(int x, int y)
+{
+  Position p = {x, y};
+  return p;
+}
+
+void print_position(Position p)
+{
+  fprintf(stderr, "%c%d\n", p.x + 'a', p.y + 1);
+}
+
 void print_row(Game *g, int row)
 {
   // Printing the head row
@@ -32,10 +43,9 @@ void print_board(Game *g)
 }
 
 // Check whether position (x,y) is on the board.
-bool out_of_bounds(ThreeChars position)
+bool out_of_bounds(int x, int y)
 {
-  return (position && 0xFF) < 0x41 || (position && 0xFF) > 0x48 || (position && 0xFF00) < 0x31 || (position && 0xFF00) > 0x38;
-  // return (position & 0xC0B0);// || position > ;
+  return x < 0 || x > N - 1 || y < 0 || y > N - 1;
 }
 
 static inline Bitboard make_move(int x, int y)

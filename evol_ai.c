@@ -42,7 +42,13 @@ uint_fast64_t most_promising_move(uint_fast64_t possible)
 }
 
 // Tests all positions and chooses a good looking one.
-Bitboard this_players_turn(Game *g)
+Position get_turn(Game *g)
 {
-  return some_move(most_promising_move(g->legal_moves));
+  uint_fast64_t some_move = most_promising_move(g->legal_moves);
+
+  Position some_pos = {-1, -1};
+  if (g->legal_moves)
+    some_pos = make_position(ctzll(some_move) % BOARD_WIDTH, ctzll(some_move) / BOARD_HEIGHT);
+
+  return some_pos;
 }
