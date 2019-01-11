@@ -1,73 +1,34 @@
 #include "definitions.h"
 #include "board.h"
 #include "scoring.h"
+#include "utility.h"
 // #include "debug.h"
 
-static inline Position make_position(int x, int y)
+Position make_position(int x, int y)
 {
   Position p = {x, y};
   return p;
 }
 
-void print_position(Position p)
-{
-  fprintf(stderr, "%c%d\n", p.x + 'a', p.y + 1);
-}
-
-void print_row(Game *g, int row)
-{
-  // Printing the head row
-  if (row == 0)
-    fprintf(stderr, " |A|B|C|D|E|F|G|H|\n");
-  // Printing a "normal" row
-
-  fprintf(stderr, "%i|", row + 1);
-  for (int i = 0; i < 8; i++)
-  {
-    fprintf(stderr,
-            "%c|",
-            g->board[BLACK] & field_at(i, row) ? 'X' : g->board[WHITE] & field_at(i, row) ? 'O' : '_');
-  }
-
-  fprintf(stderr, "\n");
-}
-
-// Print the board. The initial board should look like shown above.
-void print_board(Game *g)
-{
-  for (int i = 0; i < 8; i++)
-  {
-    print_row(g, i);
-  }
-  fflush(stderr);
-}
-
-// Check whether position (x,y) is on the board.
-bool out_of_bounds(int x, int y)
-{
-  return x < 0 || x > N - 1 || y < 0 || y > N - 1;
-}
-
-static inline Bitboard make_move(int x, int y)
-{
-  return ONE << x + BOARD_WIDTH * y;
-}
-
-ThreeChars move_to_string(Bitboard move)
-{
-  return ('A' + ctzll(move) % BOARD_WIDTH) + ('1' + ctzll(move) / BOARD_WIDTH) << __CHAR_BIT__;
-}
 
 void play(void)
 {
   srand(time(NULL));
   Game *g = NULL;
   Players us;
+#if MEASURE_TIME
+  double avg_time = 0;
+  int count_time = 0;
+#endif
 
   while (true)
   {
 #if MEASURE_TIME
-    arm_timer();
+    // clock_t t = clock(); // get current timestamp
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
+    // fprintf(stderr, "t: %llu\n", t);
+
 #endif
 
     char *input_buffer = calloc(1, 100);
@@ -138,21 +99,21 @@ void play(void)
 #if DEBUG
       fprintf(stderr, "opponent made no move\n"); // DEBUG
 #endif
-
-      if (g->legal_moves)
+      Position pos = get_turn(g);
+      if (pos.x >= 0)
       {
-        Bitboard player_move = this_players_turn(g);
-        reverse(g, player_move); // make our move
-                                 // print_board(g); // DEBUG
+        reverse(g, pos.x, pos.y);
         // print_board(g);
-        ThreeChars buffer = move_to_string(player_move);
-        printf("%s\n", (char *)&buffer);
+        printf("%c%d\n", pos.x + 'a', pos.y + 1);
       }
       else
       {
         printf("none\n"); // no valid move found
 #if MEASURE_TIME
-        average_time();
+        if (count_time)
+          fprintf(stderr, "Average time: %f\n", avg_time / count_time);
+        avg_time = 0;
+        count_time = 0;
 #endif
       }
     }
@@ -165,11 +126,17 @@ void play(void)
 #if DEBUG
       fprintf(stderr, "some_move: 0x%llx\n", *gyoutou);
 #endif
-
-      if (out_of_bounds((ThreeChars)*gyoutou))
+      // regular move of opponent
+      Position pos;
+      pos.x = toupper(*gyoutou & 0xFF) - 'A';
+      pos.y = 0xFF & (*gyoutou >> __CHAR_BIT__) - '1';
+#if DEBUG
+      fprintf(stderr, "opponent set: %c%d\n", pos.x + 'a', pos.y + 1); // DEBUG
+#endif
+      if (out_of_bounds(pos.x, pos.y))
       {
 #if DEBUG
-        fprintf(stderr, "Opponent move out of bounds: (0x%x, 0x%x)\n", *gyoutou & 0xFF, *gyoutou >> __CHAR_BIT__);
+        fprintf(stderr, "Opponent move out of bounds: (%d, %d)\n", pos.x, pos.y);
 #endif
         free(input_buffer);
         if (g)
@@ -178,24 +145,16 @@ void play(void)
         exit(0);
       }
 
-      // regular move of opponent
-      Bitboard enemy_move = make_move(toupper(*gyoutou & 0xFF) - 'A', 0xFF & (*gyoutou >> __CHAR_BIT__) - '1');
-#if DEBUG
-      ThreeChars buffer = move_to_string(enemy_move);
-      fprintf(stderr, "opponent set: %s\n", (char *)buffer); // DEBUG
-#endif
-
-      switch_stones(g);       // switch to opponent
-      reverse(g, enemy_move); // make opponent move
-                              // print_board(g); // DEBUG
-      switch_stones(g);       // switch back to this player
-      if (g->legal_moves)
+      switch_stones(g);           // switch to opponent
+      reverse(g, pos.x, pos.y);   // make opponent move
+                                  // print_board(g); // DEBUG
+      switch_stones(g);           // switch back to this player
+      pos = get_turn(g); // compute our move
+      if (pos.x >= 0)
       {
-        Bitboard player_move = this_players_turn(g);
-        reverse(g, player_move); // make our move
-                                 // print_board(g); // DEBUG
-        ThreeChars buffer = move_to_string(enemy_move);
-        printf("%s\n", (char *)&buffer);
+        reverse(g, pos.x, pos.y); // make our move
+                                  // print_board(g); // DEBUG
+        printf("%c%d\n", pos.x + 'a', pos.y + 1);
       }
       else
       {
@@ -221,7 +180,16 @@ void play(void)
     free(input_buffer);
 
 #if MEASURE_TIME
-    update_stats();
+    // t = clock() - t; // compute elapsed time
+    // fprintf(stderr, "t: %llu\n", t);
+    clock_gettime(CLOCK_REALTIME, &end);
+    double time_spent = (end.tv_sec - start.tv_sec) * 1000 +
+                        (end.tv_nsec - start.tv_nsec) / MILLION;
+
+    // double duration = t * 1000.0 / CLOCKS_PER_SEC;
+    fprintf(stderr, "duration: %g ms\n", time_spent);
+    avg_time += time_spent;
+    count_time++;
 #endif
   }
 }

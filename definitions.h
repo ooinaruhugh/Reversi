@@ -11,10 +11,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-
-
-
-
 // MACROS FOR DEBUGGING
 #define BILLION 1000000000.0
 #define MILLION 1000000.0
@@ -23,14 +19,14 @@
 #define DEBUG 0
 #define MEASURE_TIME 0
 
-// GENERAL DEFINITIONS
+// BUILTIN FUNCTION MACROS
 
 #define ctzll __builtin_ctzll
 #define clzll __builtin_clzll
 #define popcount __builtin_popcount
 
-typedef uint_fast32_t ThreeChars;
-typedef uint_fast64_t Bitboard;
+// typedef uint_fast32_t ThreeChars;
+// typedef uint_fast64_t Bitboard;
 
 // DEFINITIONS, STRUCTS, ENUMS OF THE AI
 
@@ -39,6 +35,7 @@ typedef uint_fast64_t Bitboard;
 #define BOARD_MASK (uint_fast64_t)0xFFFFFFFFFFFFFFFF // 16 * 4 bits
 #define BOARD_WIDTH 8
 #define BOARD_HEIGHT 8
+// #define N 8 // breadth + height of board
 
 #define occupied(state) ((state->board[0] | state->board[1]))
 #define empty(state) ~(occupied(state))
@@ -54,6 +51,22 @@ typedef uint_fast64_t Bitboard;
 #define TWO_SPOTS 0x3C0081818181003C
 #define FOUR_SPOTS 0x240000240000
 #define SIX_SPOTS 0x3C424242423C00
+
+// INPUT PARSING CONSTANTS
+
+// Forgive me
+#define DBL_POINT_SPACE_MAGIC 0x203A // == ": "
+#define INIT_DPS_MAGIC 0x203A74696E69     // == "init: "
+#define INIT_DPS_X_MAGIC 0x58203A74696E69 // == "init: X"
+#define INIT_DPS_O_MAGIC 0x4F203A74696E69 // == "init: O"
+
+#define SRAND_DPS_MAGIC 0x203A646E617273 // == "srand: "
+
+#define NONE_MAGIC 0x656E6F6E // == "none"
+
+#define SLICE_OF_4(bin_string) bin_string & 0xFFFFFFFF
+#define SLICE_OF_6(bin_string) bin_string & 0xFFFFFFFFFFFF
+#define SLICE_OF_7(bin_string) bin_string & 0xFFFFFFFFFFFFFF
 
 // #################BITMASK#################
 // BITMASK TO CONSTRUCT BOARD
@@ -83,37 +96,15 @@ typedef enum Delta
   UP_LEFT = -(BOARD_WIDTH + 1),
 } DELTA;
 
-// // COORDINATES OF STONE
-// // todo: This is superflous and is only neccessary for outputting a turn
+// COORDINATES OF STONE
 typedef struct
 {
   int x;
   int y;
 } Position;
 
-static inline Position make_position(int x, int y);
+Position make_position(int x, int y);
 
-// INPUT PARSING CONSTANTS
-
-#define DBL_POINT_SPACE_MAGIC 0x203A // == ": "
-
-// Forgive me
-#define INIT_DPS_MAGIC 0x203A74696E69     // == "init: "
-#define INIT_DPS_X_MAGIC 0x58203A74696E69 // == "init: X"
-#define INIT_DPS_O_MAGIC 0x4F203A74696E69 // == "init: O"
-
-#define SRAND_DPS_MAGIC 0x203A646E617273 // == "srand: "
-
-#define NONE_MAGIC 0x656E6F6E // == "none"
-
-#define SLICE_OF_4(bin_string) bin_string & 0xFFFFFFFF
-
-#define SLICE_OF_6(bin_string) bin_string & 0xFFFFFFFFFFFF
-#define SLICE_OF_7(bin_string) bin_string & 0xFFFFFFFFFFFFFF
-
-// @@@@@@@@@@@@@@@ REVERSI RANDOM BITBOARD BELOW @@@@@@@@@@@@@@@@//
-
-#define N 8 //breadth + height of board
 
 typedef enum Players
 {
@@ -123,7 +114,6 @@ typedef enum Players
 
 typedef struct Game
 {
-  // todo: members for taken turn and value of said turn
   // This way, we can easily set black or white stones. Seeing whether a stone is set requires a macro.
   uint_fast64_t board[2]; // Bitboards representing "X"/"black" and "O"/"white"
   uint_fast64_t legal_moves;

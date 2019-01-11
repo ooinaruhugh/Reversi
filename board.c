@@ -4,8 +4,8 @@ Game *init_game(Players current_player)
 {
   Game *g = malloc(sizeof(*g));
   g->current_player = current_player;
-  g->board[BLACK] = 0x810000000;  // Replace with actual magic bit pattern 0x810000000
-  g->board[WHITE] = 0x1008000000; // For maximum beauty 0x1008000000
+  g->board[BLACK] = 0x810000000;
+  g->board[WHITE] = 0x1008000000;
   g->legal_moves = possible_moves(g);
 
   return g;
@@ -18,10 +18,10 @@ uint_fast64_t bitshift(uint_fast64_t left_value, short shift_count)
   if (shift_count < 0)
     return left_value >> -shift_count;
   else
-    return left_value <<= shift_count;
+    return left_value << shift_count;
 }
 
-// This is how we detect group of enemy stones with an adjacent player stone.
+// Detecting groups of enemy stones with an adjacent player stone.
 uint_fast64_t curling(const Game *g, uint_fast64_t edge, short direction)
 {
   // We blank out the fields for the edge of whatever direction we are going to
@@ -36,8 +36,8 @@ uint_fast64_t curling(const Game *g, uint_fast64_t edge, short direction)
   // We're a doing that eight times (since it is a 8x8 board, eh?)
   for (int i = 0; i < 6; i++)
   {
-    // If a stone continues to encounter enemy stones it moves forward
-    // Otherwise it stays put wherever that stone is.
+    // If we continue to encounter enemy stones we move forward
+    // Otherwise we stay put wherever that stone is.
     // (Think Pokémon ice-floor maze)
     possible |= non_edge_set & bitshift(possible, direction);
   }
@@ -50,13 +50,12 @@ uint_fast64_t curling(const Game *g, uint_fast64_t edge, short direction)
   return possible;
 }
 
-
 // Computes all possible moves on the board for eight directions
 uint_fast64_t possible_moves(const Game *g)
 {
   uint_fast64_t moves = 0;
 
-  // curling only works for one direction
+  // curling() only works for one direction
   // So we do that eight times
   moves |= curling(g, BOTTOM, DOWN);
   moves |= curling(g, ERIGHT, DRIGHT);
@@ -70,9 +69,7 @@ uint_fast64_t possible_moves(const Game *g)
   return moves;
 }
 
-// Check whether (x,y) is a legal position to place a stone. A position is legal
-// if it is empty ('_'), is on the board, and has at least one legal direction.
-extern inline bool legal(const Game *g, uint_fast64_t move)
+bool legal(const Game *g, uint_fast64_t move)
 {
   return g->legal_moves & move;
 }
@@ -97,7 +94,7 @@ uint_fast64_t reverse_dir(Game *g, uint_fast64_t move, uint_fast64_t edge, short
 
 // Reverse the stones in all legal directions starting at (x,y).
 // May modify the state of the game.
-void reverse(Game *g, uint_fast64_t move)
+void true_reverse(Game *g, uint_fast64_t move)
 {
   g->board[g->current_player] |= move;
 
@@ -119,19 +116,12 @@ void reverse(Game *g, uint_fast64_t move)
   g->legal_moves = possible_moves(g);
 }
 
-
-extern inline bool which_stone(char c)
+void reverse(Game *g, int x, int y)
 {
-  return c == 'O';
+  true_reverse(g, field_at(x, y));
 }
 
-// If it is X's turn, then "my stone" is 'X', otherwise it is 'O'.
-extern inline char my_stone(Game *g)
-{
-  return g->current_player ? 'O' : 'X';
-}
-
-extern inline void switch_stones(Game *g)
+void switch_stones(Game *g)
 {
   g->current_player = !g->current_player;
   g->legal_moves = possible_moves(g);

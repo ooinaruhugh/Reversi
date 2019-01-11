@@ -1,7 +1,7 @@
 #include "evol_ai.h"
 // #include "definitions.h"
 
-static inline int heuristic(uint_fast64_t pos)
+int heuristic(uint_fast64_t pos)
 {
   return CORNERS & pos ? 10 : C_SPOTS & pos ? 1 : X_SPOTS & pos ? 3 : ONE_SPOTS & pos ? 1 : TWO_SPOTS & pos ? 2 : FOUR_SPOTS & pos ? 4 : SIX_SPOTS & pos ? 6 : 0;
 }
@@ -24,7 +24,7 @@ uint_fast64_t most_promising_move(uint_fast64_t possible)
     count += ctzll(possible);
     possible >>= ctzll(possible) + 1;
 
-    Bitboard current_move = ONE << count;
+    uint_fast64_t current_move = ONE << count;
     int current_score = heuristic(current_move);
 
     if (current_score == best_score)
