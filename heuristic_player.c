@@ -492,12 +492,12 @@ void play(void)
 
 int main(void)
 {
-  Game test = {{0x206021601,0x1c181c0800},0x0, WHITE};
-  print_board(&test);
-  test.legal_moves = possible_moves(&test);
-  reverse(&test, 0, 3);
-  switch_stones(&test);
-  printf("%llx\n", test.legal_moves);
-  // play();
+//   Game test = {{0x206021601,0x1c181c0800},0x0, WHITE};
+//   print_board(&test);
+//   test.legal_moves = possible_moves(&test);
+//   reverse(&test, 0, 3);
+//   switch_stones(&test);
+//   printf("%llx\n", test.legal_moves);
+  play();
   return EXIT_SUCCESS;
 }
