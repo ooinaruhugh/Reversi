@@ -253,7 +253,7 @@ unsigned int early_game_duration = EARLY_GAME_DURATION;
 uint_fast64_t *current_measure;
 
 const uint_fast64_t early_game[SCORE_BINS] = {
-    [(SCORE_BINS - 1)] = CORNERS,
+    [SCORE_BINS - 1] = CORNERS,
     [9] = B_TIER | G_TIER,
     [7] = A_TIER,
 
@@ -264,9 +264,9 @@ const uint_fast64_t early_game[SCORE_BINS] = {
 };
 
 const uint_fast64_t mid_game[SCORE_BINS] = {
-    [(SCORE_BINS - 1)] = CORNERS,
-    [10] = G_TIER,
-    [9] = B_TIER | F_TIER,
+    [SCORE_BINS - 1] = CORNERS,
+    [9] = G_TIER,
+    [7] = B_TIER | F_TIER,
     [4] = A_TIER,
     [1] = D_TIER,
     [2] = E_TIER,
@@ -275,14 +275,21 @@ const uint_fast64_t mid_game[SCORE_BINS] = {
 
 const uint_fast64_t corner_taken[SCORE_BINS] = {
     [0] = CORNERS,
-    [(SCORE_BINS - 2)] = G_TIER,
-    [(SCORE_BINS - 4)] = F_TIER,
+    [SCORE_BINS - 2] = G_TIER,
+    [SCORE_BINS - 4] = F_TIER,
     [5] = B_TIER,
     [4] = A_TIER,
     [1] = D_TIER,
     [2] = E_TIER,
-    [(SCORE_BINS - 3)] = X_SPOTS,
-    [(SCORE_BINS - 1)] = C_SPOTS,
+    [SCORE_BINS - 3] = X_SPOTS,
+    [SCORE_BINS - 1] = C_SPOTS,
+};
+
+const uint_fast64_t corner_has_fallen[SCORE_BINS] = {
+    [0] = CORNERS | C_SPOTS | G_TIER | F_TIER | X_SPOTS,
+    [7] = B_TIER,
+    [6] = A_TIER,
+    [2] = D_TIER | E_TIER,
 };
 
 //if taken corner by enemy, C TO F evil, other corner same
@@ -309,6 +316,38 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
     fprintf(stderr, "Updating heuristic.\n");
     if (is_enemy)
     {
+      if (clzll(move) > 55)
+      {
+        for (int i = 0; i < score_bins; i++)
+        {
+          current_measure[i] &= ~FOURTH_QUARTER;
+          current_measure[i] |= (corner_has_fallen[i] & FOURTH_QUARTER);
+        }
+      }
+      if (clzll(move) > 7)
+      {
+        for (int i = 0; i < score_bins; i++)
+        {
+          current_measure[i] &= ~THIRD_QUARTER;
+          current_measure[i] |= (corner_has_fallen[i] & THIRD_QUARTER);
+        }
+      }
+      if (clzll(move) > 1)
+      {
+        for (int i = 0; i < score_bins; i++)
+        {
+          current_measure[i] &= ~SECOND_QUARTER;
+          current_measure[i] |= (corner_has_fallen[i] & SECOND_QUARTER);
+        }
+      }
+      else
+      {
+        for (int i = 0; i < score_bins; i++)
+        {
+          current_measure[i] &= ~FIRST_QUARTER;
+          current_measure[i] |= (corner_has_fallen[i] & FIRST_QUARTER);
+        }
+      }
     }
     else
     {
