@@ -352,12 +352,14 @@ static inline int heuristic(uint_fast64_t pos)
 {
   for (int i = 0; i < score_bins; i++)
   {
-    if (current_measure[i] & pos)
+    if (current_measure[i] & pos) {
+      fprintf(stderr, "Returning from the new heuristic.\n");
       return i + 1;
+    }
   }
 
-  return 0;
-  // return CORNERS & pos ? 10 : C_SPOTS & pos ? 1 : X_SPOTS & pos ? 1 : A_TIER & pos ? 1 : B_TIER & pos ? 4 : D_TIER & pos ? 7 : E_TIER & pos ? 5 : F_TIER & pos ? 4 : G_TIER & pos ? 6 : 0;
+  fprintf(stderr, "Returning from the old heuristic.\n");
+  return CORNERS & pos ? 10 : C_SPOTS & pos ? 1 : X_SPOTS & pos ? 1 : A_TIER & pos ? 1 : B_TIER & pos ? 4 : D_TIER & pos ? 7 : E_TIER & pos ? 5 : F_TIER & pos ? 4 : G_TIER & pos ? 6 : 0;
 }
 
 uint_fast64_t some_move(uint_fast64_t possible)
