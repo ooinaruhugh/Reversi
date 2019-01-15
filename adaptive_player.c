@@ -274,7 +274,7 @@ const uint_fast64_t mid_game[SCORE_BINS] = {
 };
 
 const uint_fast64_t corner_taken[SCORE_BINS] = {
-    [0] = CORNERS,
+    // [0] = CORNERS,
     [SCORE_BINS - 2] = G_TIER,
     [SCORE_BINS - 4] = F_TIER,
     [5] = B_TIER,
@@ -282,7 +282,7 @@ const uint_fast64_t corner_taken[SCORE_BINS] = {
     [1] = D_TIER,
     [2] = E_TIER,
     [SCORE_BINS - 3] = X_SPOTS,
-    [SCORE_BINS - 1] = C_SPOTS,
+    [SCORE_BINS - 1] = C_SPOTS | CORNERS,
 };
 
 const uint_fast64_t corner_has_fallen[SCORE_BINS] = {
@@ -316,7 +316,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
     fprintf(stderr, "Updating heuristic.\n");
     if (is_enemy)
     {
-      if (clzll(move) > 55)
+      if (move & field_at(8,8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -324,7 +324,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_has_fallen[i] & FOURTH_QUARTER);
         }
       }
-      if (clzll(move) > 7)
+      if (move & field_at(1,8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -332,7 +332,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_has_fallen[i] & THIRD_QUARTER);
         }
       }
-      if (clzll(move) > 1)
+      if (move & field_at(8,1))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -351,7 +351,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
     }
     else
     {
-      if (clzll(move) > 55)
+      if (move & field_at(8,8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -359,7 +359,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_taken[i] & FOURTH_QUARTER);
         }
       }
-      if (clzll(move) > 7)
+      if (move & field_at(1,8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -367,7 +367,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_taken[i] & THIRD_QUARTER);
         }
       }
-      if (clzll(move) > 1)
+      if (move & field_at(8,1))
       {
         for (int i = 0; i < score_bins; i++)
         {
