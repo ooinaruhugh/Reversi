@@ -1,8 +1,6 @@
 // #include "base.h"
 #include "definitions.h"
 
-#define DEBUG 1
-
 // todo: Remove struct Position as it is not necessary
 static inline Position make_position(int x, int y)
 {
@@ -148,10 +146,11 @@ static inline void switch_stones(Game *g)
 // Check whether (x,y) is a legal position to place a stone. A position is legal
 // if it is empty ('_'), is on the board, and has at least one legal direction.
 
-// static inline bool legal(Game *g, int x, int y)
-// {
-//   return is_set(g->legal_moves, x, y);
-// }
+static inline bool legal(Game *g, int x, int y)
+{
+  return is_set(g->legal_moves, x, y);
+}
+
 uint_fast64_t reverse_dir(Game *g, uint_fast64_t move, uint_fast64_t edge, short direction)
 {
   uint_fast64_t non_edge_set = g->board[!(g->current_player)] & edge;
@@ -316,7 +315,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
     fprintf(stderr, "Updating heuristic.\n");
     if (is_enemy)
     {
-      if (move & field_at(8,8))
+      if (move & field_at(8, 8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -324,7 +323,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_has_fallen[i] & FOURTH_QUARTER);
         }
       }
-      if (move & field_at(1,8))
+      if (move & field_at(1, 8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -332,7 +331,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_has_fallen[i] & THIRD_QUARTER);
         }
       }
-      if (move & field_at(8,1))
+      if (move & field_at(8, 1))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -351,7 +350,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
     }
     else
     {
-      if (move & field_at(8,8))
+      if (move & field_at(8, 8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -359,7 +358,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_taken[i] & FOURTH_QUARTER);
         }
       }
-      if (move & field_at(1,8))
+      if (move & field_at(1, 8))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -367,7 +366,7 @@ void update_heuristic(uint_fast64_t move, bool is_enemy)
           current_measure[i] |= (corner_taken[i] & THIRD_QUARTER);
         }
       }
-      if (move & field_at(8,1))
+      if (move & field_at(8, 1))
       {
         for (int i = 0; i < score_bins; i++)
         {
@@ -391,7 +390,8 @@ static inline int heuristic(uint_fast64_t pos)
 {
   for (int i = 0; i < score_bins; i++)
   {
-    if (current_measure[i] & pos) {
+    if (current_measure[i] & pos)
+    {
       fprintf(stderr, "Returning from the new heuristic.\n");
       return i + 1;
     }
@@ -451,6 +451,48 @@ Position this_players_turn(Game *g)
 
   return some_pos;
 }
+
+// Due to recursion we need a function prototype for human_move
+Position human_move(Game *g);
+
+Position mark_possible_moves(Game *g)
+{
+
+  uint_fast64_t possible = possible_moves(g);
+
+  printf(" |A|B|C|D|E|F|G|H|\n");
+  for (int i = 0; i < BOARD_WIDTH * BOARD_HEIGHT; i++)
+  {
+    if (!(i % 8))
+      printf("%i|", 1 + i / BOARD_WIDTH);
+    if ((occupied(g) | possible) & ONE << i)
+    {
+      printf("%c|", g->board[BLACK] & (ONE << i) ? 'X' : g->board[WHITE] & (ONE << i) ? 'O' : possible & (ONE << i) ? '*' : '_');
+    }
+    else
+      printf("_|");
+    if (!((i + 1) % BOARD_WIDTH))
+      printf("\n");
+  }
+
+  printf("%c's move: ", my_stone(g));
+  // return human_move(g);
+}
+
+Position opponent_move(Game *g, uint64_t move_string, char *input_buffer)
+{
+  Position pos;
+  pos.x = toupper(move_string & 0xFF) - 'A';
+  pos.y = 0xFF & (move_string >> __CHAR_BIT__) - '1';
+
+  if (legal(g, pos.x, pos.y))
+  {
+    return pos;
+  }
+
+  fprintf(stderr, "Invalid position!");
+  // return opponent_move(g);
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 void play(void)
@@ -458,21 +500,9 @@ void play(void)
   srand(time(NULL));
   Game *g = NULL;
   Players us;
-#if MEASURE_TIME
-  double avg_time = 0;
-  int count_time = 0;
-#endif
 
   while (true)
   {
-#if MEASURE_TIME
-    // clock_t t = clock(); // get current timestamp
-    struct timespec start, end;
-    clock_gettime(CLOCK_REALTIME, &start);
-    // fprintf(stderr, "t: %llu\n", t);
-
-#endif
-
     char *input_buffer = calloc(1, 100);
     uint64_t *gyoutou = input_buffer; // Alternatively BOL (jap. gyoutou)
 
@@ -507,9 +537,6 @@ void play(void)
       // "a == b" == "!(a ^ b)"
       if (*gyoutou ^ INIT_DPS_X_MAGIC && *gyoutou ^ INIT_DPS_O_MAGIC)
       {
-#if DEBUG
-        fprintf(stderr, "Illegal stone: %c\n", c);
-#endif
         free(input_buffer);
         if (g)
           free(g);
@@ -520,11 +547,6 @@ void play(void)
       g = init_game(us);
       memcpy(current_measure, early_game, score_bins * sizeof(*early_game));
       early_game_duration = EARLY_GAME_DURATION;
-
-#if DEBUG
-      print_board(g);                          // DEBUG
-      fprintf(stderr, "my stone is: %c\n", c); // DEBUG
-#endif
     }
 
     // todo: like really, which sensible person wouldn't do this with args
@@ -540,9 +562,6 @@ void play(void)
 
     else if ((*gyoutou & 0xFFFFFFFF) == NONE_MAGIC)
     {
-#if DEBUG
-      fprintf(stderr, "opponent made no move\n"); // DEBUG
-#endif
       Position pos = this_players_turn(g);
       if (pos.x >= 0)
       {
@@ -554,12 +573,6 @@ void play(void)
       else
       {
         printf("none\n"); // no valid move found
-#if MEASURE_TIME
-        if (count_time)
-          fprintf(stderr, "Average time: %f\n", avg_time / count_time);
-        avg_time = 0;
-        count_time = 0;
-#endif
       }
     }
 
@@ -568,21 +581,14 @@ void play(void)
     else if (!(0xFFFFFFFFFFF50000 & *gyoutou))
     {
       *gyoutou &= 0xFFFF;
-#if DEBUG
-      fprintf(stderr, "some_move: 0x%llx\n", *gyoutou);
-#endif
+
       // regular move of opponent
       Position pos;
       pos.x = toupper(*gyoutou & 0xFF) - 'A';
       pos.y = 0xFF & (*gyoutou >> __CHAR_BIT__) - '1';
-#if DEBUG
-      fprintf(stderr, "opponent set: %c%d\n", pos.x + 'a', pos.y + 1); // DEBUG
-#endif
+
       if (pos.x < 0 || pos.x >= N || pos.y < 0 || pos.y >= N)
       {
-#if DEBUG
-        fprintf(stderr, "Opponent move out of bounds: (%d, %d)\n", pos.x, pos.y);
-#endif
         free(input_buffer);
         if (g)
           free(g);
@@ -617,28 +623,9 @@ void play(void)
         free(g);
       exit(0);
     }
-#if DEBUG
-    print_board(g); // DEBUG
-#endif
-    //        sleep(2); // seconds
     fflush(stdout); // need to push the data out of the door
-#if DEBUG
-    fprintf(stderr, "Possible moves:0x%" PRIxFAST64 "\n", g->legal_moves);
-#endif
+
     free(input_buffer);
-
-#if MEASURE_TIME
-    // t = clock() - t; // compute elapsed time
-    // fprintf(stderr, "t: %llu\n", t);
-    clock_gettime(CLOCK_REALTIME, &end);
-    double time_spent = (end.tv_sec - start.tv_sec) * 1000 +
-                        (end.tv_nsec - start.tv_nsec) / MILLION;
-
-    // double duration = t * 1000.0 / CLOCKS_PER_SEC;
-    fprintf(stderr, "duration: %g ms\n", time_spent);
-    avg_time += time_spent;
-    count_time++;
-#endif
   }
 }
 
